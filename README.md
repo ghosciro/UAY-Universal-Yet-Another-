@@ -33,7 +33,7 @@ Choose one of the two installation methods:
 Install the latest build into an isolated environment via `pipx`:
 
 ```bash
-pipx install git+[https://github.com/ghosciro/UAY-Universal-Yet-Another-.git](https://github.com/ghosciro/UAY-Universal-Yet-Another-.git)
+pipx install git+https://github.com/ghosciro/UAY-Universal-Yet-Another-.git
 ```
 
 To update later:
