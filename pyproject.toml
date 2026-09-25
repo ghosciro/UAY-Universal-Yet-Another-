@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "uay-py"
+version = "0.1.0"
+description = "A yay-like package manager wrapper for apt and flatpak"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "rapidfuzz",
+]
+
+[project.scripts]
+uay-py = "uay.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["uay"]
