@@ -1,9 +1,9 @@
 import asyncio
 from typing import List
-from uay.models import Package
-from uay.backends.base import BaseBackend
-from uay.backends.apt import AptBackend
-from uay.backends.flatpak import FlatpakBackend
+from models import Package
+from backends.base import BaseBackend
+from backends.apt import AptBackend
+from backends.flatpak import FlatpakBackend
 
 class Engine:
     def __init__(self):

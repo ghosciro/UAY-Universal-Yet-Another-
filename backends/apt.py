@@ -1,7 +1,7 @@
 import asyncio
 from typing import List, Set
-from uay.models import Package
-from uay.backends.base import BaseBackend
+from models import Package
+from backends.base import BaseBackend
 
 class AptBackend(BaseBackend):
     async def get_installed_apt_packages(self) -> Set[str]:

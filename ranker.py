@@ -1,6 +1,6 @@
 from typing import List
 from rapidfuzz import fuzz
-from uay.models import Package
+from models import Package
 
 def get_package_score(p: Package, query: str) -> float:
     name = p.name.lower()

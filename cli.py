@@ -1,9 +1,9 @@
 import argparse
 import asyncio
 import sys
-from uay.engine import Engine
-from uay.ranker import rank_packages
-from uay.ui import select_packages
+from engine import Engine
+from ranker import rank_packages
+from ui import select_packages
 
 async def amain():
     parser = argparse.ArgumentParser(description="yay-py: A Python wrapper for apt and flatpak")

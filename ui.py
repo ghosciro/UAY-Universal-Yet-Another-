@@ -1,7 +1,7 @@
 import subprocess
 import sys
 from typing import List
-from uay.models import Package
+from models import Package
 
 def select_packages(packages: List[Package]) -> List[Package]:
     if not packages:

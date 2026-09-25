@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
-from uay.models import Package
+from models import Package
 
 class BaseBackend(ABC):
     @abstractmethod

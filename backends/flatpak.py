@@ -1,7 +1,7 @@
 import asyncio
 from typing import List
-from uay.models import Package
-from uay.backends.base import BaseBackend
+from models import Package
+from backends.base import BaseBackend
 
 class FlatpakBackend(BaseBackend):
     async def search(self, query: str) -> List[Package]:
