@@ -51,3 +51,33 @@ class FlatpakBackend(BaseBackend):
             'flatpak', 'update', '-y'
         )
         await process.communicate()
+
+    async def get_installed_list(self) -> List[Package]:
+        proc = await asyncio.create_subprocess_exec(
+            "flatpak", "list", "--app", "--columns=application,name,description",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL
+        )
+        stdout, _ = await proc.communicate()
+        packages = []
+        for line in stdout.decode().splitlines():
+            parts = line.split("\t")
+            if len(parts) >= 2:
+                app_id = parts[0].strip()
+                name = parts[1].strip()
+                desc = parts[2].strip() if len(parts) > 2 else ""
+                packages.append(
+                    Package(
+                        id=app_id,
+                        name=name,
+                        source="FLATPAK",
+                        desc=desc,
+                        installed=True
+                    )
+                )
+        return packages
+
+    async def remove(self, package_id: str) -> bool:
+        proc = await asyncio.create_subprocess_exec("flatpak", "uninstall", "-y", package_id)
+        await proc.wait()
+        return proc.returncode == 0

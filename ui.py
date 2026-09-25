@@ -3,69 +3,86 @@ import sys
 from typing import List
 from models import Package
 
-def select_packages(packages: List[Package]) -> List[Package]:
+
+def select_packages(
+    packages: List[Package], prompt: str = "Seleziona > ", query: str = ""
+) -> List[Package]:
     if not packages:
         return []
-
     lines = []
+
+    NAME_WIDTH = 36  # leggermente più spazioso per contenere anche [Installato]
+
     for i, p in enumerate(packages):
-        # 1. Colonna Nome visibile nella lista
-        if getattr(p, "installed", False):
-            name_col = f"\033[1;32m{p.name} [Installato]\033[0m"
+        is_inst = getattr(p, "installed", False)
+        status_tag = " [Installato]" if is_inst else ""
+        name_str = f"{p.name}{status_tag}"
+
+        # Tronca a larghezza fissa solo se eccede, così le colonne rimangono perfette
+        if len(name_str) > NAME_WIDTH:
+            disp_name = name_str[: NAME_WIDTH - 2] + ".."
         else:
-            name_col = f"\033[1;31m{p.name}\033[0m"
+            disp_name = name_str
 
-        raw_name = f"{p.name} [Installato]" if getattr(p, "installed", False) else p.name
-        pad = " " * max(1, 32 - len(raw_name))
-        name_col += pad
+        color = "\033[1;32m" if is_inst else "\033[1;31m"
+        name_col = f"{color}{disp_name:<{NAME_WIDTH}}\033[0m"
 
-        # 2. Origine
         src = p.source.upper()
-        src_col = f"\033[1;34m{src:<8}\033[0m" if "APT" in src else f"\033[1;35m{src:<8}\033[0m"
+        if "APT" in src:
+            src_col = f"\033[1;34m{src:<8}\033[0m"
+        elif "FLATPAK" in src:
+            src_col = f"\033[1;35m{src:<8}\033[0m"
+        elif "PIPX" in src:
+            src_col = f"\033[1;33m{src:<8}\033[0m"
+        else:
+            src_col = f"{src:<8}"
 
-        # 3. Descrizione breve
         desc = (p.desc or "").strip().replace("\t", " ").replace("\n", " ")
-
-        # Campi FZF:
-        # {1}: indice
-        # {2}: riga visibile nella lista
-        # {3}: id pacchetto
-        # {4}: nome pulito
-        # {5}: sorgente (APT/FLATPAK)
-        # {6}: stato installato
-        # {7}: descrizione completa
-        status_str = "Installato" if getattr(p, "installed", False) else "Non installato"
         display_line = f"{name_col} | {src_col} | {desc}"
-        lines.append(f"{i}\t{display_line}\t{p.id}\t{p.name}\t{src}\t{status_str}\t{desc}")
+        status_str = "Installato" if is_inst else "Non installato"
 
+        # Nel campo 4 passiamo p.name completo (senza tagli) per l'anteprima
+        lines.append(
+            f"{i}\t{display_line}\t{p.id}\t{p.name}\t{src}\t{status_str}\t{desc}"
+        )
     fzf_input = "\n".join(lines).encode("utf-8")
 
     preview_cmd = (
-        'echo -e "\\033[1;36m=== INFORMAZIONI PACCHETTO ===\\033[0m\\n" && '
-        'echo -e "\\033[1mNome:\\033[0m        {4}" && '
+        'echo -e "\\033[1;36m=== PACKAGE DETAILS ===\\033[0m\\n" && '
+        'echo -e "\\033[1mName:\\033[0m        {4}" && '
         'echo -e "\\033[1mID:\\033[0m          {3}" && '
-        'echo -e "\\033[1mOrigine:\\033[0m     {5}" && '
-        'echo -e "\\033[1mStato:\\033[0m       {6}\\n" && '
-        'echo -e "\\033[1;33mDescrizione:\\033[0m" && '
+        'echo -e "\\033[1mSource:\\033[0m      {5}" && '
+        'echo -e "\\033[1mStatus:\\033[0m      {6}\\n" && '
+        'echo -e "\\033[1;33mDescription:\\033[0m" && '
         'echo "{7}"'
     )
 
+    fzf_cmd = [
+            "fzf",
+            "-m",
+            "-e",
+            "--ansi",
+            "--delimiter=\t",
+            "--with-nth=2",
+            "--no-hscroll",
+            "--tac",
+            "--preview",
+            preview_cmd,
+            "--preview-window=right:50%:wrap",
+            "--prompt",
+            prompt,
+            "--header",
+            "TAB: multi-select | INVIO: conferma",
+        ]
+    if query:
+        fzf_cmd.extend(["--query", query])
+
     try:
         process = subprocess.Popen(
-            [
-                "fzf",
-                "-m",
-                "--ansi",
-                "--delimiter=\t",
-                "--with-nth=2",
-                "--preview", preview_cmd,
-                "--preview-window=right:50%:wrap",
-                "--prompt", "Seleziona > ",
-                "--header", "TAB: seleziona multipli | INVIO: conferma"
-            ],
+            fzf_cmd,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=sys.stderr
+            stderr=sys.stderr,
         )
         stdout, _ = process.communicate(input=fzf_input)
 
@@ -81,5 +98,5 @@ def select_packages(packages: List[Package]) -> List[Package]:
         return [packages[i] for i in selected_indices]
 
     except FileNotFoundError:
-        print("Errore: fzf non è installato o non si trova nel PATH.", file=sys.stderr)
+        print("Error: fzf is not installed or not found in PATH.", file=sys.stderr)
         return []

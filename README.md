@@ -55,9 +55,13 @@ pipx install ./uay-0.1.0-py3-none-any.whl
 
 ---
 
+---
+
 ## Usage
 
-Search for any software or library by passing a query:
+### Search & Install
+
+Search for any software or library across all enabled backends:
 
 ```bash
 uay <query>
@@ -69,15 +73,37 @@ Example:
 uay whatsapp
 ```
 
+---
+
+### Interactive Uninstall (`-u`)
+
+List currently installed applications and select which ones to remove via `fzf`:
+
+```bash
+uay -u
+```
+
+*(or `uay --uninstall`)*
+
+---
+
+### System Update
+
+Running `uay` without any arguments updates all configured package managers:
+
+```bash
+uay
+```
+
+---
+
 ### Keybindings
 
 - **Type to filter**: Instant fuzzy search across returned package names and descriptions.
 - **Up/Down arrows / Ctrl+j / Ctrl+k**: Navigate through entries.
 - **TAB**: Toggle selection for multiple packages.
-- **ENTER**: Confirm and proceed with installing selected items.
+- **ENTER**: Confirm installation or removal of selected items.
 - **ESC / Ctrl+c**: Exit without making changes.
-
----
 
 ## Uninstallation
 

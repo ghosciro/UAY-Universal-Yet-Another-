@@ -1,37 +1,41 @@
 import asyncio
 from typing import List
 from models import Package
-from backends.base import BaseBackend
 from backends.apt import AptBackend
 from backends.flatpak import FlatpakBackend
 
-class Engine:
+
+class SearchEngine:
     def __init__(self):
-        self.backends: List[BaseBackend] = [AptBackend(), FlatpakBackend()]
+        self.backends = [
+            AptBackend(),
+            FlatpakBackend(),
+        ]
 
     async def search(self, query: str) -> List[Package]:
         tasks = [backend.search(query) for backend in self.backends]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
-        all_packages = []
-        for result in results:
-            if isinstance(result, list):
-                all_packages.extend(result)
-        return all_packages
-        
-    async def update_all(self) -> None:
-        tasks = [backend.update() for backend in self.backends]
-        await asyncio.gather(*tasks)
 
-    async def install(self, pkgs: List[Package]) -> None:
-        apt_pkgs = [p for p in pkgs if p.source == 'apt']
-        flatpak_pkgs = [p for p in pkgs if p.source == 'flatpak']
-        
+        merged: List[Package] = []
+        for res in results:
+            if isinstance(res, list):
+                merged.extend(res)
+        return merged
+
+    async def get_all_installed(self) -> List[Package]:
         tasks = []
-        if apt_pkgs:
-            tasks.append(AptBackend().install(apt_pkgs))
-        if flatpak_pkgs:
-            tasks.append(FlatpakBackend().install(flatpak_pkgs))
-            
-        if tasks:
-            await asyncio.gather(*tasks)
+        for backend in self.backends:
+            if hasattr(backend, "get_installed_list"):
+                tasks.append(backend.get_installed_list())
+            elif hasattr(backend, "get_manual_installed_packages"):
+                tasks.append(backend.get_manual_installed_packages())
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        installed: List[Package] = []
+        for res in results:
+            if isinstance(res, list):
+                installed.extend(res)
+
+        # Ordina alfabeticamente per nome pacchetto
+        return sorted(installed, key=lambda pkg: pkg.name.lower())

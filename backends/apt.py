@@ -65,3 +65,37 @@ class AptBackend(BaseBackend):
         print("Running apt upgrade...")
         p2 = await asyncio.create_subprocess_exec("sudo", "apt-get", "upgrade", "-y")
         await p2.communicate()
+
+    async def get_manual_installed_packages(self) -> List[Package]:
+            # ${binary:Synopsis} è il campo corretto per il sommario di una riga
+            proc = await asyncio.create_subprocess_exec(
+                "dpkg-query", "-W", "-f=${Package}\t${Status}\t${binary:Synopsis}\n",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.DEVNULL
+            )
+            stdout, _ = await proc.communicate()
+
+            packages = []
+            for line in stdout.decode(errors="ignore").splitlines():
+                parts = line.split("\t")
+                if len(parts) >= 2:
+                    pkg_name = parts[0].strip()
+                    status = parts[1].strip()
+                    desc = parts[2].strip() if len(parts) > 2 and parts[2].strip() else "Pacchetto di sistema APT"
+
+                    if "install ok installed" in status:
+                        packages.append(
+                            Package(
+                                id=pkg_name,
+                                name=pkg_name,
+                                source="APT",
+                                desc=desc,
+                                installed=True
+                            )
+                        )
+            return packages
+
+    async def remove(self, package_id: str) -> bool:
+        proc = await asyncio.create_subprocess_exec("sudo", "apt", "remove", "-y", package_id)
+        await proc.wait()
+        return proc.returncode == 0

@@ -17,3 +17,6 @@ class BaseBackend(ABC):
     async def update(self) -> None:
         """Update packages metadata and upgrade system."""
         pass
+    @abstractmethod
+    async def remove(self, package_id: str) -> bool:
+        raise NotImplementedError
