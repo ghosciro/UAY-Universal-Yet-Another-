@@ -65,7 +65,7 @@ def select_packages(
             "--delimiter=\t",
             "--with-nth=2",
             "--no-hscroll",
-            "--tac",
+            "--no-sort",
             "--preview",
             preview_cmd,
             "--preview-window=right:50%:wrap",

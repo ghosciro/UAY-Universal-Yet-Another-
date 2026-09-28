@@ -3,6 +3,7 @@ from typing import List
 from models import Package
 from backends.apt import AptBackend
 from backends.flatpak import FlatpakBackend
+from backends.snap import SnapBackend
 
 
 class SearchEngine:
@@ -10,6 +11,7 @@ class SearchEngine:
         self.backends = [
             AptBackend(),
             FlatpakBackend(),
+            SnapBackend(),
         ]
 
     async def search(self, query: str) -> List[Package]:

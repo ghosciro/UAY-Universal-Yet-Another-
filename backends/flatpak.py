@@ -4,6 +4,9 @@ from models import Package
 from backends.base import BaseBackend
 
 class FlatpakBackend(BaseBackend):
+    def binary_name(self) -> str:
+        return "flatpak"
+    
     async def search(self, query: str) -> List[Package]:
         process = await asyncio.create_subprocess_exec(
             'flatpak', 'search', query,
@@ -77,7 +80,14 @@ class FlatpakBackend(BaseBackend):
                 )
         return packages
 
-    async def remove(self, package_id: str) -> bool:
-        proc = await asyncio.create_subprocess_exec("flatpak", "uninstall", "-y", package_id)
-        await proc.wait()
-        return proc.returncode == 0
+    async def remove(self, package_id: str, autoremove: bool = False) -> bool:
+            proc = await asyncio.create_subprocess_exec("flatpak", "uninstall", "-y", package_id)
+            if await proc.wait() != 0:
+                return False
+
+            if autoremove:
+                cleanup = await asyncio.create_subprocess_exec("flatpak", "uninstall", "--unused", "-y")
+                await cleanup.wait()
+                return cleanup.returncode == 0
+
+            return True

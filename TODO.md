@@ -1,4 +1,3 @@
-
 # ToDo
 
 ## APT
@@ -15,14 +14,14 @@
 
 ## PIPX
 
-- [X] Implementare `PipxBackend` (ricerca, lista pacchetti Python isolati)
-- [X] Gestire installazione (`pipx install`) e rimozione (`pipx uninstall`)
+- [ ] Implementare `PipxBackend` (ricerca, lista pacchetti Python isolati)
+- [ ] Gestire installazione (`pipx install`) e rimozione (`pipx uninstall`)
 
 ## Snap
 
-- [ ] Implementare `SnapBackend` (ricerca con `snap find <query>` o via socket `/run/snapd.socket`)
-- [ ] Gestire recupero pacchetti installati (`snap list`)
-- [ ] Gestire installazione (`snap install`) e rimozione (`snap remove`)
+- [X] Implementare `SnapBackend` (ricerca con `snap find <query>` o via socket `/run/snapd.socket`)
+- [X] Gestire recupero pacchetti installati (`snap list`)
+- [X] Gestire installazione (`snap install`) e rimozione (`snap remove`)
 
 ## Homebrew
 

@@ -4,6 +4,9 @@ from models import Package
 from backends.base import BaseBackend
 
 class AptBackend(BaseBackend):
+    def binary_name(self) -> str:
+        return "apt"
+    
     async def get_installed_apt_packages(self) -> Set[str]:
         proc = await asyncio.create_subprocess_exec(
             "dpkg-query", "-W", "-f=${db:Status-Status} ${Package}\n",
@@ -95,7 +98,14 @@ class AptBackend(BaseBackend):
                         )
             return packages
 
-    async def remove(self, package_id: str) -> bool:
-        proc = await asyncio.create_subprocess_exec("sudo", "apt", "remove", "-y", package_id)
-        await proc.wait()
-        return proc.returncode == 0
+    async def remove(self, package_id: str, autoremove: bool = False) -> bool:
+            proc = await asyncio.create_subprocess_exec("sudo", "apt", "remove", "-y", package_id)
+            if await proc.wait() != 0:
+                return False
+
+            if autoremove:
+                cleanup = await asyncio.create_subprocess_exec("sudo", "apt", "autoremove", "-y")
+                await cleanup.wait()
+                return cleanup.returncode == 0
+
+            return True

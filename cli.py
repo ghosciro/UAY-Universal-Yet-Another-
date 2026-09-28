@@ -2,6 +2,9 @@ import argparse
 import asyncio
 import sys
 import re
+import shutil
+import subprocess
+import sys
 from engine import SearchEngine
 from ranker import rank_packages
 from ui import select_packages
@@ -72,6 +75,7 @@ def contains_exact_word(query: str, text: str) -> bool:
 async def handle_search_and_install(engine: SearchEngine, query: str) -> None:
     print(f"\033[1;34m::\033[0m Searching for '{query}'...")
     results = await engine.search(query)
+    installed = await engine.get_all_installed()
     if not results:
         print("No packages found.")
         return
@@ -88,9 +92,16 @@ async def handle_search_and_install(engine: SearchEngine, query: str) -> None:
     if not filtered:
         print(f"No packages found containing the exact word '{query}'.")
         return
+    for pkg in filtered:
+        pkg.installed = any(
+            pkg.id == inst_pkg.id and pkg.source == inst_pkg.source
+            for inst_pkg in installed
+        )
 
-    ranked = rank_packages(filtered, query)
+    ranked = rank_packages(filtered, query = query)
     selected = select_packages(ranked, prompt="Install > ")
+
+    
     if not selected:
         print("Operation cancelled.")
         return
@@ -115,19 +126,24 @@ async def handle_search_and_install(engine: SearchEngine, query: str) -> None:
 async def run() -> None:
     parser = argparse.ArgumentParser(
         prog="uay",
-        description="Universal Yet Another - Wrapper unificato per APT e Flatpak",
+        description="Universal Arch-like Wrapper - Unified CLI wrapper for APT, Flatpak, and PIPX",
     )
     parser.add_argument(
-        "-u",
-        "--uninstall",
+        "-u", "--uninstall",
+        nargs="*",
+        metavar="PKG",
+        help="Uninstall one or more packages",
+    )
+    parser.add_argument(
+        "-a", "--autoremove",
         action="store_true",
-        help="Visualizza i pacchetti installati e seleziona cosa rimuovere",
+        help="Automatically remove unused orphan dependencies",
     )
     parser.add_argument(
         "query",
         nargs="?",
         default="",
-        help="Nome o filtro dell'applicazione",
+        help="Application name or search filter",
     )
 
     args = parser.parse_args()
@@ -142,8 +158,25 @@ async def run() -> None:
         await handle_search_and_install(engine, args.query)
 
 
+
+def ensure_dependencies() -> None:
+    if shutil.which("fzf") is None:
+        print("[uay] Missing required dependency: fzf not found.")
+        reply = input("Install it automatically via APT? [Y/n]: ").strip().lower()
+        if reply in ("", "y", "yes", "s", "si"):
+            try:
+                subprocess.run(["sudo", "apt", "update"], check=True)
+                subprocess.run(["sudo", "apt", "install", "-y", "fzf"], check=True)
+                print("[uay] fzf installed successfully!\n")
+            except subprocess.CalledProcessError:
+                sys.exit("[uay] Failed to install fzf. Aborting.")
+        else:
+            sys.exit("[uay] Cannot proceed without fzf.")
+
+
 def main() -> None:
     try:
+        ensure_dependencies()
         asyncio.run(run())
     except KeyboardInterrupt:
         print("\nInterrupted by user.")
