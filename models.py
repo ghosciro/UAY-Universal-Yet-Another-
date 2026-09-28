@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 @dataclass
 class Package:
@@ -9,3 +8,6 @@ class Package:
     source: str
     installed: bool = False
     score: float = 0.0
+
+    def __iter__(self):
+        yield self

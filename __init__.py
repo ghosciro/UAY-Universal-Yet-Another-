@@ -1,1 +1,1 @@
-"""yay-py package manager wrapper"""
+"""uay package manager wrapper"""

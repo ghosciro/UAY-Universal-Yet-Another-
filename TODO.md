@@ -25,9 +25,9 @@
 
 ## Homebrew
 
-- [ ] Implementare `HomebrewBackend` (`brew search <query>`, parsing `brew info --json=v2`)
-- [ ] Gestire elenco pacchetti installati (`brew list --formula --cask`)
-- [ ] Gestire installazione (`brew install`) e rimozione (`brew uninstall`)
+- [X] Implementare `HomebrewBackend` (`brew search <query>`, parsing `brew info --json=v2`)
+- [X] Gestire elenco pacchetti installati (`brew list --formula --cask`)
+- [X] Gestire installazione (`brew install`) e rimozione (`brew uninstall`)
 
 ## Pacstall
 

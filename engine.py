@@ -1,14 +1,13 @@
 import asyncio
 from typing import List
 from models import Package
-from backends.apt import AptBackend
-from backends.flatpak import FlatpakBackend
-from backends.snap import SnapBackend
+from backends import *
 
 
 class SearchEngine:
     def __init__(self):
         self.backends = [
+            HomebrewBackend(),
             AptBackend(),
             FlatpakBackend(),
             SnapBackend(),

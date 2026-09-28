@@ -8,6 +8,7 @@ SOURCE_PRIORITY = {
     "SNAP": 40,
     "PIPX": 30,
     "APT": 20,
+    "HOMEBREW": 10,
 }
 
 def get_package_score(p: Package, query: str) -> float:
