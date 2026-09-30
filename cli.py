@@ -81,24 +81,24 @@ async def handle_search_and_install(engine: SearchEngine, query: str) -> None:
         return
 
     # Filtra tenendo solo i pacchetti che contengono la parola esatta nel nome, ID o descrizione
-    filtered = [
+    '''filtered = [
         p
         for p in results
         if contains_exact_word(query, p.name)
         or contains_exact_word(query, p.id or "")
         or contains_exact_word(query, p.desc or "")
-    ]
+    ]'''
 
-    if not filtered:
+    if not results:
         print(f"No packages found containing the exact word '{query}'.")
         return
-    for pkg in filtered:
+    for pkg in results:
         pkg.installed = any(
             pkg.id == inst_pkg.id and pkg.source == inst_pkg.source
             for inst_pkg in installed
         )
 
-    ranked = rank_packages(filtered, query = query)
+    ranked = rank_packages(results, query = query)
     selected = select_packages(ranked, prompt="Install > ")
 
     

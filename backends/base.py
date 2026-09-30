@@ -2,10 +2,13 @@ import shutil
 from models import Package  # o dal path relativo del tuo progetto
 from abc import ABC, abstractmethod
 from typing import ClassVar, List
-
+import asyncio
 
 class BaseBackend(ABC):
-    binary_name: ClassVar[str]
+    
+    def __init__(self):
+        self.binary_name: str = ""
+        self.install_cmd_prefix: List[str] = []
 
     def is_available(self) -> bool:
         """Returns True if the backend CLI tool exists on the system."""
@@ -15,9 +18,16 @@ class BaseBackend(ABC):
     async def search(self, query: str) -> List[Package]:
         pass
 
-    @abstractmethod
-    async def install(self, pkgs: List[Package]) -> None:
-        pass
+    async def install(self, pkg_id: str) -> None:
+        if not pkg_id or not self.install_cmd_prefix:
+            return
+            
+        # Unisce il prefisso del comando con il nome del pacchetto
+        cmd = self.install_cmd_prefix + [pkg_id]
+        
+        # L'asterisco * spacchetta la lista in argomenti separati
+        process = await asyncio.create_subprocess_exec(*cmd)
+        await process.communicate()
 
     @abstractmethod
     async def update(self) -> None:

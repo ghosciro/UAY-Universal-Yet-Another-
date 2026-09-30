@@ -4,8 +4,10 @@ from models import Package
 from backends.base import BaseBackend
 
 class FlatpakBackend(BaseBackend):
-    def binary_name(self) -> str:
-        return "flatpak"
+    def __init__(self):
+        super().__init__()
+        self.binary_name = "flatpak"
+        self.install_cmd_prefix = ["sudo", "flatpak", "install", "-y"]
     
     async def search(self, query: str) -> List[Package]:
         process = await asyncio.create_subprocess_exec(
@@ -38,15 +40,6 @@ class FlatpakBackend(BaseBackend):
                     source='flatpak'
                 ))
         return packages
-
-    async def install(self, pkgs: List[Package]) -> None:
-        if not pkgs:
-            return
-        pkg_ids = [p.id for p in pkgs]
-        process = await asyncio.create_subprocess_exec(
-            'flatpak', 'install', '-y', *pkg_ids
-        )
-        await process.communicate()
 
     async def update(self) -> None:
         print("Running flatpak update...")

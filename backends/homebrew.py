@@ -8,18 +8,14 @@ from backends.base import BaseBackend
 
 
 class HomebrewBackend(BaseBackend):
-    def binary_name(self) -> str:
-        for path in [
-            shutil.which("brew"),
-            "/home/linuxbrew/.linuxbrew/bin/brew",
-            os.path.expanduser("~/.linuxbrew/bin/brew"),
-        ]:
-            if path and os.path.exists(path):
-                return path
-        return "brew"
+    def __init__(self):
+        super().__init__()
+        self.binary_name = "brew"
+        self.install_cmd_prefix = ["brew", "install"]
+
 
     async def search(self, query: str) -> List[Package]:
-        brew_bin = self.binary_name()
+        brew_bin = self.binary_name
         
         # 1. Ricerca formule
         proc = await asyncio.create_subprocess_exec(
@@ -73,7 +69,7 @@ class HomebrewBackend(BaseBackend):
         ]
 
     async def get_installed_list(self) -> List[Package]:
-        brew_bin = self.binary_name()
+        brew_bin = self.binary_name
         proc = await asyncio.create_subprocess_exec(
             brew_bin, "list", "--formula",
             stdout=asyncio.subprocess.PIPE,
@@ -96,51 +92,22 @@ class HomebrewBackend(BaseBackend):
                 ))
         return packages
 
-    async def install(
-            self, pkgs: Union[List[Union[Package, str]], Package, str]
-        ) -> None:
-            if not pkgs:
-                return
 
-            # Normalizza in una lista uniforme
-            pkg_sequence: List[Union[Package, str]]
-            if isinstance(pkgs, (list, tuple, set)):
-                pkg_sequence = list(pkgs)
-            else:
-                pkg_sequence = [pkgs]
-
-            installed = {p.id for p in await self.get_installed_list()}
-            to_install: List[str] = []
-
-            for item in pkg_sequence:
-                pkg_id = item.id if isinstance(item, Package) else str(item)
-                if pkg_id in installed:
-                    print(f"brew: '{pkg_id}' è già installato.")
-                else:
-                    to_install.append(pkg_id)
-
-            if not to_install:
-                return
-
-            process = await asyncio.create_subprocess_exec(
-                self.binary_name(), "install", *to_install
-            )
-            await process.communicate()
 
     async def update(self) -> None:
         print("Running brew update && brew upgrade...")
         proc_update = await asyncio.create_subprocess_exec(
-            self.binary_name(), "update"
+            self.binary_name, "update"
         )
         await proc_update.communicate()
 
         proc_upgrade = await asyncio.create_subprocess_exec(
-            self.binary_name(), "upgrade"
+            self.binary_name, "upgrade"
         )
         await proc_upgrade.communicate()
 
     async def remove(self, package_id: str, autoremove: bool = False) -> bool:
-        cmd = [self.binary_name(), "uninstall"]
+        cmd = [self.binary_name, "uninstall"]
         cmd.append(package_id)
         if autoremove:
             cmd.append("&& brew autoremove")

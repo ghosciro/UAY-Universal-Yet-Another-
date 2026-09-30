@@ -4,9 +4,11 @@ from models import Package
 from backends.base import BaseBackend
 
 class AptBackend(BaseBackend):
-    def binary_name(self) -> str:
-        return "apt"
-    
+    def __init__(self):
+        super().__init__()
+        self.binary_name = "apt"
+        self.install_cmd_prefix = ["sudo", "apt", "install", "-y"]
+
     async def get_installed_apt_packages(self) -> Set[str]:
         proc = await asyncio.create_subprocess_exec(
             "dpkg-query", "-W", "-f=${db:Status-Status} ${Package}\n",
@@ -50,15 +52,6 @@ class AptBackend(BaseBackend):
                     installed=(pkg_id in installed_pkgs)
                 ))
         return packages
-
-    async def install(self, pkgs: List[Package]) -> None:
-        if not pkgs:
-            return
-        pkg_ids = [p.id for p in pkgs]
-        process = await asyncio.create_subprocess_exec(
-            "sudo", "apt-get", "install", "-y", *pkg_ids
-        )
-        await process.communicate()
 
     async def update(self) -> None:
         print("Running apt update...")

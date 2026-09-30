@@ -4,9 +4,11 @@ from models import Package
 from backends.base import BaseBackend
 
 class SnapBackend(BaseBackend):
-    def binary_name(self) -> str:
-        return "snap"
-    
+    def __init__(self):
+        super().__init__()
+        self.binary_name = "snap"
+        self.install_cmd_prefix = ["sudo", "snap", "install"]
+
     async def search(self, query: str) -> List[Package]:
         process = await asyncio.create_subprocess_exec(
             'snap', 'find', query,
@@ -34,18 +36,6 @@ class SnapBackend(BaseBackend):
                     source='snap'
                 ))
         return packages
-
-    async def install(self, pkgs) -> None:
-        if not pkgs:
-            return
-        if isinstance(pkgs, (str, Package)):
-            pkgs = [pkgs]
-        pkg_ids = [p if isinstance(p, str) else p.id for p in pkgs]
-        
-        process = await asyncio.create_subprocess_exec(
-            'sudo', 'snap', 'install', *pkg_ids
-        )
-        await process.communicate()
 
     async def update(self) -> None:
         print("Running snap refresh...")
